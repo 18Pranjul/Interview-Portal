@@ -4,8 +4,8 @@ from django.http import HttpResponse
 from .models import Interview
 from django.contrib.auth.models import User
 from django.utils.dateparse import parse_datetime
-import datetime
 import pytz
+from django.core.mail import EmailMessage
 
 utc=pytz.UTC
 
@@ -29,11 +29,23 @@ def InterviewPanel(request):
         start_time = request.POST.get('start_time')
         end_time = request.POST.get('end_time')
         
-        if is_valid(interview_participants , parse_datetime(start_time), parse_datetime(end_time)):
+        if is_valid(interview_participants , parse_datetime(start_time), parse_datetime(end_time) , -1):
             interview = Interview.objects.create(start_time=start_time , end_time=end_time)
             for participant in interview_participants:
                 p = User.objects.get(username=participant)
                 interview.participants.add(p)
+            
+            email_to = []
+            for participant in interview_participants:
+                p = User.objects.get(username=participant)
+                email_to.append(p.email)
+
+            email = EmailMessage(
+                "Interview Scheduled",
+                "Your interview is scheduled: " + start_time + " - " + end_time + ".",
+                to = email_to
+            )
+            email.send()
 
         return render(
             request, 
@@ -65,7 +77,7 @@ def UpdateInterview(request , pk):
         start_time = request.POST.get('start_time')
         end_time = request.POST.get('end_time')
         
-        if is_valid(interview_participants , parse_datetime(start_time), parse_datetime(end_time)):
+        if is_valid(interview_participants , parse_datetime(start_time), parse_datetime(end_time) , pk):
             interview = Interview.objects.get(pk=pk)
             interview.start_time=start_time
             interview.end_time=end_time
@@ -74,6 +86,18 @@ def UpdateInterview(request , pk):
                 p = User.objects.get(username=participant)
                 interview.participants.add(p)
             interview.save()
+
+            email_to = []
+            for participant in interview_participants:
+                p = User.objects.get(username=participant)
+                email_to.append(p.email)
+                
+            email = EmailMessage(
+                "Interview Updated",
+                "Your interview is updated: " + start_time + " - " + end_time + ".",
+                to = email_to
+            )
+            email.send()
 
         return render(
             request, 
@@ -86,8 +110,9 @@ def UpdateInterview(request , pk):
         )
         
 
-def is_valid(participants , start_time , end_time):
+def is_valid(participants , start_time , end_time , ignore):
 
+    print(ignore)
     errors.clear()
     flag = True
     if len(participants) < 2:
@@ -96,6 +121,11 @@ def is_valid(participants , start_time , end_time):
     
     interviews = Interview.objects.all()
     for interview in interviews:
+        print(interview.pk , ignore)
+        if interview.pk == int(ignore):
+            continue
+        print(interview.pk , ignore)
+        print(type(interview.pk) , type(ignore))
         for p in interview.participants.all():
             if p.username in participants and clash(start_time , end_time , interview.start_time , interview.end_time):
                 errors.append("Participant " + p.username + " already has interview scheduled")
