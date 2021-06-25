@@ -32,6 +32,9 @@
                                         {{ participant }};
                                     {% endfor %}
                                 </td>
+                                <td>
+                                    <a href="{% url 'update' interview.pk %}"><button type="button">Edit</button></a>
+                                </td>
                             </tr>
                         {% endfor %}
                     </tbody>
@@ -41,6 +44,18 @@
                 <div class="container">
                   <div class="jumbotron">
                     <h1 class="display-12">Schedule an Interview</h1>
+                    {% if errors|length == 0 %}
+                        <div class="alert alert-success alert-dismissible fade show">
+                            <strong>No errors</strong>
+                            <button type="button" class="close" data-dismiss="alert">&times;</button>
+                        </div>
+                    {% endif %}
+                    {% for error in errors %}
+                        <div class="alert alert-danger alert-dismissible fade show">
+                            <strong>Error!</strong> {{error}}
+                            <button type="button" class="close" data-dismiss="alert">&times;</button>
+                        </div>
+                    {% endfor %}
                     <form action="" method = "POST">
                         {% csrf_token %}
                         <div class="form-group">
@@ -68,13 +83,6 @@
               </div>
           </div>
       </div>
-      <center>
-        <form action="">
-            Hey
-            {% csrf_token %}
-            {{ form.as_table }}
-        </form>
-      </center>
       <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
       <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
       <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
